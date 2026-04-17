@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>REPS — Timers de entreno</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="root"></div>
+
+<!-- Tweaks defaults -->
+<script>
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "alwaysOn": true,
+  "ringMode": true
+}/*EDITMODE-END*/;
+</script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="icons.jsx"></script>
+<script type="text/babel" src="phone.jsx"></script>
+<script type="text/babel" src="ui.jsx"></script>
+<script type="text/babel" src="screen-home.jsx"></script>
+<script type="text/babel" src="screen-stopwatch.jsx"></script>
+<script type="text/babel" src="screen-countdown.jsx"></script>
+<script type="text/babel" src="screen-tabata.jsx"></script>
+<script type="text/babel" src="screen-emom.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useMemo } = React;
+
+function PhoneApp({ initialScreen = 'home', initialTabataConfig, alwaysOn = false }) {
+  const [screen, setScreen] = useState(initialScreen);
+  const [cfg, setCfg] = useState(initialTabataConfig || {
+    prep: 0, work: 20, rest: 10, rounds: 8, sets: 1, setRest: 60,
+  });
+
+  const go = (s) => setScreen(s);
+  const back = () => setScreen('home');
+
+  let content;
+  if (screen === 'home') content = <HomeScreen go={go}/>;
+  else if (screen === 'stopwatch') content = <StopwatchScreen back={back}/>;
+  else if (screen === 'countdown') content = <CountdownScreen back={back}/>;
+  else if (screen === 'tabata') content = <TabataConfigScreen back={back} onStart={() => setScreen('tabata-run')} cfg={cfg} setCfg={setCfg}/>;
+  else if (screen === 'tabata-run') content = <TabataRunScreen back={() => setScreen('tabata')} cfg={cfg}/>;
+  else if (screen === 'emom') content = <EmomScreen back={back}/>;
+  else content = <HomeScreen go={go}/>;
+
+  const isTimerScreen = ['stopwatch', 'countdown', 'tabata-run', 'emom'].includes(screen);
+
+  return (
+    <>
+      {content}
+      {alwaysOn && isTimerScreen && (
+        <div style={{
+          position: 'absolute',
+          top: 36, right: 14, zIndex: 20,
+          display: 'flex', alignItems: 'center', gap: 5,
+          padding: '3px 7px', borderRadius: 100,
+          background: 'color-mix(in oklab, var(--accent) 18%, transparent)',
+          border: '1px solid color-mix(in oklab, var(--accent) 40%, transparent)',
+          pointerEvents: 'none',
+        }}>
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)' }}/>
+          <span style={{
+            fontFamily: 'JetBrains Mono, monospace', fontSize: 8, fontWeight: 700,
+            letterSpacing: '0.12em', color: 'var(--accent)', textTransform: 'uppercase',
+          }}>ON</span>
+        </div>
+      )}
+    </>
+  );
+}
+
+function Showcase() {
+  const [tweaks, setTweaks] = useState(TWEAK_DEFAULTS);
+  const [tweaksVisible, setTweaksVisible] = useState(false);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.data?.type === '__activate_edit_mode') setTweaksVisible(true);
+      else if (e.data?.type === '__deactivate_edit_mode') setTweaksVisible(false);
+    };
+    window.addEventListener('message', handler);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', handler);
+  }, []);
+
+  const updateTweak = (k, v) => {
+    const next = { ...tweaks, [k]: v };
+    setTweaks(next);
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [k]: v } }, '*');
+  };
+
+  const tabataCfg = { prep: 0, work: 40, rest: 20, rounds: 6, sets: 3, setRest: 60 };
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#f3f0e8' }}>
+      <div className="page-header" style={{ color: '#0B0B0E' }}>
+        <h1 style={{ color: '#0B0B0E' }}>REPS<span style={{ color: '#2F4FFF' }}>.</span></h1>
+        <p style={{ color: '#6a6a74' }}>Minimal atlético · 6 pantallas · todos los timers funcionan</p>
+      </div>
+
+      <div className="frames-grid">
+        <Phone theme="light" label="01 · Dashboard">
+          <PhoneApp initialScreen="home" alwaysOn={tweaks.alwaysOn}/>
+        </Phone>
+        <Phone theme="light" label="02 · Cronómetro">
+          <PhoneApp initialScreen="stopwatch" alwaysOn={tweaks.alwaysOn}/>
+        </Phone>
+        <Phone theme="light" label="03 · Cuenta atrás">
+          <PhoneApp initialScreen="countdown" alwaysOn={tweaks.alwaysOn}/>
+        </Phone>
+        <Phone theme="light" label="04 · EMOM">
+          <PhoneApp initialScreen="emom" alwaysOn={tweaks.alwaysOn}/>
+        </Phone>
+        <Phone theme="light" label="05 · Config Tabata">
+          <PhoneApp initialScreen="tabata" initialTabataConfig={tabataCfg} alwaysOn={tweaks.alwaysOn}/>
+        </Phone>
+        <Phone theme="light" label="06 · Tabata en marcha">
+          <PhoneApp initialScreen="tabata-run" initialTabataConfig={tabataCfg} alwaysOn={tweaks.alwaysOn}/>
+        </Phone>
+      </div>
+
+      <div style={{ padding: '0 48px 60px', textAlign: 'center', color: '#8e8e97', fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.1em', marginTop: 20 }}>
+        Toca cualquier pantalla para interactuar · cronómetro, cuenta atrás, EMOM y Tabata funcionan en vivo
+      </div>
+
+      <div className={`tweaks-panel ${tweaksVisible ? 'show' : ''}`} style={{ background: '#fff', color: '#0B0B0E', border: '1px solid #e2ded2' }}>
+        <h4 style={{ color: '#6a6a74' }}>Tweaks</h4>
+        <div className="tweak-row" style={{ borderColor: '#e2ded2' }}>
+          <span className="tweak-label" style={{ color: '#0B0B0E' }}>Pantalla siempre encendida</span>
+          <div className="tweak-ctrl" style={{ background: '#f3f0e8', borderColor: '#e2ded2' }}>
+            <div className={`tweak-seg ${!tweaks.alwaysOn ? 'on' : ''}`} style={tweaks.alwaysOn ? {} : { background: '#2F4FFF', color: '#fff' }} onClick={() => updateTweak('alwaysOn', false)}>Off</div>
+            <div className={`tweak-seg ${tweaks.alwaysOn ? 'on' : ''}`} style={tweaks.alwaysOn ? { background: '#2F4FFF', color: '#fff' } : {}} onClick={() => updateTweak('alwaysOn', true)}>On</div>
+          </div>
+        </div>
+        <div className="tweak-row" style={{ borderColor: '#e2ded2' }}>
+          <span className="tweak-label" style={{ color: '#0B0B0E' }}>Timer</span>
+          <div className="tweak-ctrl" style={{ background: '#f3f0e8', borderColor: '#e2ded2' }}>
+            <div className={`tweak-seg ${!tweaks.ringMode ? 'on' : ''}`} style={!tweaks.ringMode ? { background: '#2F4FFF', color: '#fff' } : {}} onClick={() => updateTweak('ringMode', false)}>Barra</div>
+            <div className={`tweak-seg ${tweaks.ringMode ? 'on' : ''}`} style={tweaks.ringMode ? { background: '#2F4FFF', color: '#fff' } : {}} onClick={() => updateTweak('ringMode', true)}>Anillo</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Showcase/>);
+</script>
+</body>
+</html>
