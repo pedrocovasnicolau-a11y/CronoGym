@@ -152,7 +152,11 @@ function Showcase() {
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<PhoneApp/>);
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <Phone theme="light">
+    <PhoneApp/>
+  </Phone>
+);
 </script>
 </body>
 </html>
