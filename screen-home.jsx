@@ -3,13 +3,12 @@
 // ═══════════════════════════════════════════════════════
 const { useState: useStateH, useEffect: useEffectH } = React;
 
-function HomeScreen({ go, ringMode }) {
-  const today = { sessions: 4, totalMin: 48, bestRest: '01:30' };
+function HomeScreen({ go, onTab }) {
   const quickTimers = [
     { id: 'stopwatch', label: 'Cronómetro', hint: 'Cuenta ascendente', Icon: IconStopwatch, tone: 'accent' },
-    { id: 'countdown', label: 'Cuenta atrás', hint: 'Timer simple', Icon: IconCountdown, tone: 'neutral' },
-    { id: 'tabata',    label: 'Tabata',       hint: '8×20/10',      Icon: IconTabata,    tone: 'accent' },
-    { id: 'emom',      label: 'EMOM',         hint: 'Cada minuto',  Icon: IconEmom,      tone: 'neutral' },
+    { id: 'countdown', label: 'Cuenta atrás', hint: 'Timer simple',    Icon: IconCountdown, tone: 'accent' },
+    { id: 'tabata',    label: 'Tabata',       hint: '8×20/10',         Icon: IconTabata,    tone: 'accent' },
+    { id: 'emom',      label: 'EMOM',         hint: 'Cada minuto',     Icon: IconEmom,      tone: 'accent' },
   ];
 
   return (
@@ -18,31 +17,13 @@ function HomeScreen({ go, ringMode }) {
       <div className="scroll-area" style={{ padding: '4px 18px 16px' }}>
         {/* Hero greeting */}
         <div style={{ padding: '4px 0 18px' }}>
-          <div className="eyebrow" style={{ marginBottom: 6 }}>Sábado · 17 abr</div>
+          <div className="eyebrow" style={{ marginBottom: 6 }}>Tu entreno</div>
           <h1 className="title-xl" style={{ fontSize: 32 }}>
-            Vamos<span style={{ color: 'rgb(7, 35, 219)' }}>.</span>
+            Vamos<span style={{ color: 'var(--accent)' }}>.</span>
           </h1>
           <div style={{ color: 'var(--text-dim)', fontSize: 14, marginTop: 4 }}>
-            Sesión #128 · listo cuando tú lo estés
+            Elige un timer y empieza
           </div>
-        </div>
-
-        {/* Today stats strip */}
-        <div style={{
-          display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
-          gap: 8, marginBottom: 18,
-        }}>
-          {[
-            { k: 'Sesiones', v: today.sessions, sub: 'esta semana' },
-            { k: 'Minutos',  v: today.totalMin, sub: 'entrenando' },
-            { k: 'Mejor',    v: today.bestRest, sub: 'descanso',   mono: true },
-          ].map((s, i) => (
-            <div key={i} className="card" style={{ padding: 12 }}>
-              <div className="eyebrow" style={{ fontSize: 9 }}>{s.k}</div>
-              <div className="digits" style={{ fontSize: s.mono ? 20 : 26, marginTop: 6, color: 'var(--text)' }}>{s.v}</div>
-              <div style={{ fontSize: 10, color: 'var(--text-faint)', marginTop: 2 }}>{s.sub}</div>
-            </div>
-          ))}
         </div>
 
         {/* Primary CTA: Quick rest timer */}
@@ -71,11 +52,10 @@ function HomeScreen({ go, ringMode }) {
             <div key={t.id} className="press card" onClick={() => go(t.id)} style={{ padding: 14, cursor: 'pointer' }}>
               <div style={{
                 width: 36, height: 36, borderRadius: 12,
-                background: t.tone === 'accent' ? 'var(--accent)' : 'var(--bg-elev)',
-                color: t.tone === 'accent' ? 'var(--accent-ink)' : 'var(--text)',
+                background: 'var(--accent)',
+                color: 'var(--accent-ink)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 marginBottom: 14,
-                border: t.tone === 'accent' ? 'none' : '1px solid var(--border)',
               }}>
                 <t.Icon size={18}/>
               </div>
@@ -85,7 +65,7 @@ function HomeScreen({ go, ringMode }) {
           ))}
         </div>
       </div>
-      <TabBar active="home" onChange={() => {}}/>
+      <TabBar active="home" onChange={onTab}/>
     </>
   );
 }
