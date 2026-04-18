@@ -3,7 +3,8 @@
 // ═══════════════════════════════════════════════════════
 const { useState: useStateTB, useEffect: useEffectTB, useRef: useRefTB } = React;
 
-function TabataConfigScreen({ back, onStart, cfg, setCfg }) {
+function TabataConfigScreen({ back, onStart, cfg, setCfg, onTab }) {
+  const [pickerTarget, setPickerTarget] = useStateTB(null); // 'work' | 'rest' | 'setRest' | null
   const total = (cfg.prep + (cfg.work + cfg.rest) * cfg.rounds - cfg.rest) * cfg.sets + cfg.setRest * (cfg.sets - 1);
 
   const stepper = (onMinus, onPlus) => (
@@ -23,9 +24,30 @@ function TabataConfigScreen({ back, onStart, cfg, setCfg }) {
     </div>
   );
 
+  const pickerValue = pickerTarget === 'work' ? cfg.work : pickerTarget === 'rest' ? cfg.rest : pickerTarget === 'setRest' ? cfg.setRest : 0;
+  const pickerLabel = pickerTarget === 'work' ? 'Tiempo de trabajo' : pickerTarget === 'rest' ? 'Tiempo de descanso' : 'Descanso entre sets';
+
+  const handlePickerConfirm = (v) => {
+    if (pickerTarget === 'work') setCfg(c => ({ ...c, work: Math.max(5, Math.min(600, v)) }));
+    else if (pickerTarget === 'rest') setCfg(c => ({ ...c, rest: Math.max(0, Math.min(600, v)) }));
+    else if (pickerTarget === 'setRest') setCfg(c => ({ ...c, setRest: Math.max(0, Math.min(600, v)) }));
+    setPickerTarget(null);
+  };
+
   return (
     <>
       <TopBar title="Configurar Tabata" onBack={back}/>
+
+      {pickerTarget && (
+        <TimeDrumPicker
+          value={pickerValue}
+          label={pickerLabel}
+          maxMinutes={9}
+          onChange={handlePickerConfirm}
+          onClose={() => setPickerTarget(null)}
+        />
+      )}
+
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '0 16px 10px', minHeight: 0, overflow: 'hidden' }}>
         {/* Overview */}
         <div style={{
@@ -42,41 +64,43 @@ function TabataConfigScreen({ back, onStart, cfg, setCfg }) {
           </div>
         </div>
 
-        {/* Work / Rest time pickers */}
+        {/* Work / Rest time pickers — tap time to open drum picker */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
-          <div style={{
+          <div className="press" style={{
             background: 'color-mix(in oklab, var(--work) 15%, var(--bg))',
             border: '1px solid color-mix(in oklab, var(--work) 40%, var(--border))',
             borderRadius: 14, padding: '8px 10px',
-            display: 'flex', flexDirection: 'column', gap: 4,
-          }}>
+            display: 'flex', flexDirection: 'column', gap: 4, cursor: 'pointer',
+          }} onClick={() => setPickerTarget('work')}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div className="eyebrow" style={{ color: 'var(--work)', fontSize: 9 }}>Trabajo</div>
               {stepper(
-                () => setCfg(c => ({ ...c, work: Math.max(5, c.work - 5) })),
-                () => setCfg(c => ({ ...c, work: Math.min(600, c.work + 5) })),
+                e => { e.stopPropagation(); setCfg(c => ({ ...c, work: Math.max(5, c.work - 5) })); },
+                e => { e.stopPropagation(); setCfg(c => ({ ...c, work: Math.min(600, c.work + 5) })); },
               )}
             </div>
             <div className="digits" style={{ fontSize: 24, color: 'var(--text)' }}>{fmtMMSS(cfg.work)}</div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--work)', letterSpacing: '0.08em' }}>toca para editar</div>
           </div>
-          <div style={{
+          <div className="press" style={{
             background: 'color-mix(in oklab, var(--rest) 15%, var(--bg))',
             border: '1px solid color-mix(in oklab, var(--rest) 40%, var(--border))',
             borderRadius: 14, padding: '8px 10px',
-            display: 'flex', flexDirection: 'column', gap: 4,
-          }}>
+            display: 'flex', flexDirection: 'column', gap: 4, cursor: 'pointer',
+          }} onClick={() => setPickerTarget('rest')}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div className="eyebrow" style={{ color: 'var(--rest)', fontSize: 9 }}>Descanso</div>
               {stepper(
-                () => setCfg(c => ({ ...c, rest: Math.max(0, c.rest - 5) })),
-                () => setCfg(c => ({ ...c, rest: Math.min(600, c.rest + 5) })),
+                e => { e.stopPropagation(); setCfg(c => ({ ...c, rest: Math.max(0, c.rest - 5) })); },
+                e => { e.stopPropagation(); setCfg(c => ({ ...c, rest: Math.min(600, c.rest + 5) })); },
               )}
             </div>
             <div className="digits" style={{ fontSize: 24, color: 'var(--text)' }}>{fmtMMSS(cfg.rest)}</div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--rest)', letterSpacing: '0.08em' }}>toca para editar</div>
           </div>
         </div>
 
-        {/* Rounds / Sets / SetRest — compact rows */}
+        {/* Rounds / Sets / SetRest */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
           {compactRow('Rondas por set', cfg.rounds,
             () => setCfg(c => ({ ...c, rounds: Math.max(1, c.rounds - 1) })),
@@ -84,19 +108,28 @@ function TabataConfigScreen({ back, onStart, cfg, setCfg }) {
           {compactRow('Sets', cfg.sets,
             () => setCfg(c => ({ ...c, sets: Math.max(1, c.sets - 1) })),
             () => setCfg(c => ({ ...c, sets: Math.min(20, c.sets + 1) })))}
-          {compactRow('Descanso entre sets', fmtMMSS(cfg.setRest),
-            () => setCfg(c => ({ ...c, setRest: Math.max(0, c.setRest - 15) })),
-            () => setCfg(c => ({ ...c, setRest: Math.min(600, c.setRest + 15) })))}
+          <div className="press card" style={{ padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+            onClick={() => setPickerTarget('setRest')}>
+            <div style={{ minWidth: 0 }}>
+              <div className="eyebrow" style={{ fontSize: 9 }}>Descanso entre sets</div>
+              <div className="digits" style={{ fontSize: 20, color: 'var(--text)', marginTop: 2 }}>{fmtMMSS(cfg.setRest)}</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--accent)', marginTop: 2, letterSpacing: '0.08em' }}>toca para editar</div>
+            </div>
+            {stepper(
+              e => { e.stopPropagation(); setCfg(c => ({ ...c, setRest: Math.max(0, c.setRest - 15) })); },
+              e => { e.stopPropagation(); setCfg(c => ({ ...c, setRest: Math.min(600, c.setRest + 15) })); },
+            )}
+          </div>
         </div>
 
         {/* Preset chips */}
         <div className="eyebrow" style={{ marginBottom: 6, fontSize: 9 }}>Presets</div>
         <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 10 }}>
           {[
-            { n: 'Clásico',   c: { prep: 0, work: 20, rest: 10, rounds: 8, sets: 1, setRest: 60 } },
-            { n: 'HIIT',      c: { prep: 0, work: 40, rest: 20, rounds: 6, sets: 3, setRest: 60 } },
-            { n: 'EMOM 10',   c: { prep: 0, work: 45, rest: 15, rounds: 10, sets: 1, setRest: 0 } },
-            { n: 'Quemar',    c: { prep: 0, work: 30, rest: 10, rounds: 10, sets: 2, setRest: 90 } },
+            { n: 'Clásico', c: { prep: 0, work: 20, rest: 10, rounds: 8, sets: 1, setRest: 60 } },
+            { n: 'HIIT',    c: { prep: 0, work: 40, rest: 20, rounds: 6, sets: 3, setRest: 60 } },
+            { n: 'EMOM 10', c: { prep: 0, work: 45, rest: 15, rounds: 10, sets: 1, setRest: 0 } },
+            { n: 'Quemar',  c: { prep: 0, work: 30, rest: 10, rounds: 10, sets: 2, setRest: 90 } },
           ].map(p => (
             <div key={p.n} className="press" onClick={() => setCfg(p.c)} style={{
               padding: '5px 10px', borderRadius: 100,
@@ -113,13 +146,13 @@ function TabataConfigScreen({ back, onStart, cfg, setCfg }) {
           <IconPlay size={16}/> Empezar Tabata
         </button>
       </div>
-      <TabBar active="timers" onChange={() => {}}/>
+      <TabBar active="timers" onChange={onTab}/>
     </>
   );
 }
 
 // ─── TABATA RUN ───
-function TabataRunScreen({ back, cfg }) {
+function TabataRunScreen({ back, cfg, onTab, settings }) {
   const phases = useRefTB([]);
   if (phases.current.length === 0) {
     const arr = [];
@@ -146,7 +179,12 @@ function TabataRunScreen({ back, cfg }) {
         if (r <= 0.1) {
           setIdx(i => {
             const ni = i + 1;
-            if (ni < list.length) setRemaining(list[ni].dur);
+            if (ni < list.length) {
+              setRemaining(list[ni].dur);
+              triggerAlert(settings);
+            } else {
+              triggerAlert(settings);
+            }
             return ni;
           });
           return 0;
@@ -243,7 +281,7 @@ function TabataRunScreen({ back, cfg }) {
           </RoundBtn>
         </div>
       </div>
-      <TabBar active="timers" onChange={() => {}}/>
+      <TabBar active="timers" onChange={onTab}/>
     </>
   );
 }

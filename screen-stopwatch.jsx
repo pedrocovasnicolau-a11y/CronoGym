@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════
 const { useState: useStateSW, useEffect: useEffectSW, useRef: useRefSW } = React;
 
-function StopwatchScreen({ back, ringMode }) {
+function StopwatchScreen({ back, onTab }) {
   const [running, setRunning] = useStateSW(false);
   const [elapsed, setElapsed] = useStateSW(0); // seconds
   const startRef = useRefSW(null);
@@ -102,7 +102,7 @@ function StopwatchScreen({ back, ringMode }) {
           <RoundBtn size={56} onClick={lap} bg="var(--bg-card)" fg="var(--text)"><IconFlag size={20}/></RoundBtn>
         </div>
       </div>
-      <TabBar active="timers" onChange={() => {}}/>
+      <TabBar active="timers" onChange={onTab}/>
     </>
   );
 }

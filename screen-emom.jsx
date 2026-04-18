@@ -3,19 +3,35 @@
 // ═══════════════════════════════════════════════════════
 const { useState: useStateEM, useEffect: useEffectEM, useRef: useRefEM } = React;
 
-function EmomScreen({ back }) {
-  const [minuteSec, setMinuteSec] = useStateEM(60); // duración de cada intervalo
+function EmomScreen({ back, onTab, settings }) {
+  const [minuteSec, setMinuteSec] = useStateEM(60);
   const [totalMinutes, setTotalMinutes] = useStateEM(10);
   const [running, setRunning] = useStateEM(false);
-  const [elapsed, setElapsed] = useStateEM(0); // total elapsed seconds
+  const [elapsed, setElapsed] = useStateEM(0);
+  const [showIntervalPicker, setShowIntervalPicker] = useStateEM(false);
+  const lastMinuteRef = useRefEM(-1);
 
   useEffectEM(() => {
     if (!running) return;
     const id = setInterval(() => {
       setElapsed(e => {
         const total = minuteSec * totalMinutes;
-        if (e >= total) { setRunning(false); return total; }
-        return e + 0.1;
+        if (e >= total) {
+          setRunning(false);
+          triggerAlert(settings);
+          return total;
+        }
+        // alert at each minute boundary
+        const prevMin = Math.floor(e / minuteSec);
+        const nextE = e + 0.1;
+        const nextMin = Math.floor(nextE / minuteSec);
+        if (nextMin > prevMin && nextE < total) {
+          if (lastMinuteRef.current !== nextMin) {
+            lastMinuteRef.current = nextMin;
+            triggerAlert(settings);
+          }
+        }
+        return nextE;
       });
     }, 100);
     return () => clearInterval(id);
@@ -27,24 +43,25 @@ function EmomScreen({ back }) {
   const secInMinute = elapsed % minuteSec;
   const remainingInMinute = Math.max(0, minuteSec - secInMinute);
   const pctMinute = (secInMinute / minuteSec) * 100;
-  const pctTotal = total > 0 ? (elapsed / total) * 100 : 0;
 
-  // Alert tint in last 5 seconds of each minute
   const isAlert = running && remainingInMinute <= 5 && remainingInMinute > 0;
   const done = elapsed >= total;
 
-  const reset = () => { setRunning(false); setElapsed(0); };
+  const reset = () => { setRunning(false); setElapsed(0); lastMinuteRef.current = -1; };
 
   return (
     <>
-      <TopBar title="EMOM" onBack={back} right={
-        <div className="press" style={{
-          width: 36, height: 36, borderRadius: 12,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'var(--bg-card)', border: '1px solid var(--border)',
-          color: 'var(--text)',
-        }}><IconEmom size={16}/></div>
-      }/>
+      <TopBar title="EMOM" onBack={back}/>
+
+      {showIntervalPicker && (
+        <TimeDrumPicker
+          value={minuteSec}
+          label="Duración del intervalo"
+          maxMinutes={4}
+          onChange={v => setMinuteSec(Math.max(15, Math.min(300, v || 15)))}
+          onClose={() => setShowIntervalPicker(false)}
+        />
+      )}
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '0 20px', minHeight: 0, justifyContent: 'space-between' }}>
         {/* Banner */}
@@ -107,19 +124,23 @@ function EmomScreen({ back }) {
           </div>
         </div>
 
-        {/* Config */}
+        {/* Config — tap interval time to open drum picker */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          <div className="card" style={{ padding: 10 }}>
+          <div className={`card${!running ? ' press' : ''}`} style={{ padding: 10, cursor: !running ? 'pointer' : 'default' }}
+            onClick={() => { if (!running) setShowIntervalPicker(true); }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <div className="eyebrow" style={{ fontSize: 9 }}>Intervalo</div>
                 <div className="digits" style={{ fontSize: 20, color: 'var(--text)', marginTop: 2 }}>{fmtMMSS(minuteSec)}</div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <div className="press picker-btn" style={{ width: 26, height: 26 }} onClick={() => { if (!running) setMinuteSec(Math.min(300, minuteSec + 15)); }}><IconPlus size={12}/></div>
-                <div className="press picker-btn" style={{ width: 26, height: 26 }} onClick={() => { if (!running) setMinuteSec(Math.max(15, minuteSec - 15)); }}><IconMinus size={12}/></div>
-              </div>
+              {!running && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <div className="press picker-btn" style={{ width: 26, height: 26 }} onClick={e => { e.stopPropagation(); if (!running) setMinuteSec(Math.min(300, minuteSec + 15)); }}><IconPlus size={12}/></div>
+                  <div className="press picker-btn" style={{ width: 26, height: 26 }} onClick={e => { e.stopPropagation(); if (!running) setMinuteSec(Math.max(15, minuteSec - 15)); }}><IconMinus size={12}/></div>
+                </div>
+              )}
             </div>
+            {!running && <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--accent)', marginTop: 4, letterSpacing: '0.08em' }}>toca para editar</div>}
           </div>
           <div className="card" style={{ padding: 10 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -142,7 +163,6 @@ function EmomScreen({ back }) {
             {running ? <IconPause size={30}/> : <IconPlay size={30}/>}
           </RoundBtn>
           <RoundBtn size={56} onClick={() => {
-            // skip to next minute
             const next = (Math.floor(elapsed / minuteSec) + 1) * minuteSec;
             setElapsed(Math.min(total, next));
           }} bg="var(--bg-card)" fg="var(--text)">
@@ -150,7 +170,7 @@ function EmomScreen({ back }) {
           </RoundBtn>
         </div>
       </div>
-      <TabBar active="timers" onChange={() => {}}/>
+      <TabBar active="timers" onChange={onTab}/>
     </>
   );
 }
