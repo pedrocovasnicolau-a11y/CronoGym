@@ -5,10 +5,11 @@ const { useState: useStateSW, useEffect: useEffectSW, useRef: useRefSW } = React
 
 function StopwatchScreen({ back, onTab }) {
   const [running, setRunning] = useStateSW(false);
-  const [elapsed, setElapsed] = useStateSW(0); // seconds
+  const [elapsed, setElapsed] = useStateSW(0);
   const startRef = useRefSW(null);
   const accumRef = useRefSW(0);
   const [laps, setLaps] = useStateSW([]);
+  const [lapStartElapsed, setLapStartElapsed] = useStateSW(0);
 
   useEffectSW(() => {
     if (!running) return;
@@ -28,15 +29,23 @@ function StopwatchScreen({ back, onTab }) {
       setRunning(true);
     }
   };
-  const reset = () => { setRunning(false); setElapsed(0); accumRef.current = 0; setLaps([]); };
-  const lap = () => setLaps(l => [{ n: l.length + 1, t: elapsed, split: elapsed - (l[0]?.t || 0) }, ...l]);
+  const reset = () => {
+    setRunning(false); setElapsed(0); accumRef.current = 0;
+    setLaps([]); setLapStartElapsed(0);
+  };
+  const lap = () => {
+    setLaps(l => [{ n: l.length + 1, t: elapsed, split: elapsed - (l[0]?.t || 0) }, ...l]);
+    setLapStartElapsed(elapsed);
+  };
+
+  const partial = elapsed - lapStartElapsed;
 
   return (
     <>
       <TopBar title="Cronómetro" onBack={back}/>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '0 20px', minHeight: 0 }}>
         {/* Status */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
           <div style={{
             width: 8, height: 8, borderRadius: '50%',
             background: running ? 'var(--accent)' : 'var(--text-faint)',
@@ -45,20 +54,38 @@ function StopwatchScreen({ back, onTab }) {
           <span className="eyebrow">{running ? 'En marcha' : elapsed > 0 ? 'Pausado' : 'Listo'}</span>
         </div>
 
-        {/* Big time */}
-        <div style={{ textAlign: 'center', padding: '20px 0 12px' }}>
-          <div className="eyebrow" style={{ marginBottom: 8 }}>Tiempo total</div>
-          <div className="digits" style={{ fontSize: 64, color: 'var(--text)' }}>
-            {fmtHMS(elapsed)}
+        {/* Dual timers */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 14 }}>
+          {/* Total */}
+          <div style={{ textAlign: 'center', padding: '14px 0 10px' }}>
+            <div className="eyebrow" style={{ marginBottom: 6, fontSize: 10 }}>Tiempo total</div>
+            <div className="digits" style={{ fontSize: 62, color: 'var(--text)' }}>
+              {fmtHMS(elapsed)}
+            </div>
+          </div>
+          {/* Parcial */}
+          <div style={{
+            textAlign: 'center', padding: '12px 0',
+            background: 'color-mix(in oklab, var(--accent) 10%, var(--bg-card))',
+            border: '1px solid color-mix(in oklab, var(--accent) 30%, var(--border))',
+            borderRadius: 18,
+          }}>
+            <div className="eyebrow" style={{ marginBottom: 6, fontSize: 10, color: 'var(--accent)' }}>Tiempo parcial</div>
+            <div className="digits" style={{ fontSize: 46, color: 'var(--accent)' }}>
+              {fmtHMS(partial)}
+            </div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--accent)', opacity: 0.7, marginTop: 4, letterSpacing: '0.1em' }}>
+              {laps.length === 0 ? 'desde el inicio' : `desde serie ${laps[0].n}`}
+            </div>
           </div>
         </div>
 
         {/* Progress indicator (minute-based visual) */}
-        <div style={{ padding: '14px 0 20px' }}>
+        <div style={{ padding: '0 0 14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
             <span className="eyebrow" style={{ fontSize: 10 }}>Minuto actual</span>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-dim)', fontWeight: 700 }}>
-              {String(Math.floor(elapsed / 60) + (elapsed % 60 > 0 ? 1 : 1)).padStart(2,'0')}
+              {String(Math.floor(elapsed / 60) + 1).padStart(2,'0')}
             </span>
           </div>
           <ProgressBar pct={(elapsed % 60) / 60 * 100} color="var(--accent)"/>
@@ -69,7 +96,7 @@ function StopwatchScreen({ back, onTab }) {
           {laps.length === 0 ? (
             <div style={{
               border: '1px dashed var(--border)', borderRadius: 14,
-              padding: '22px 16px', textAlign: 'center',
+              padding: '18px 16px', textAlign: 'center',
               color: 'var(--text-faint)', fontSize: 12, fontFamily: 'var(--font-mono)',
               letterSpacing: '0.1em', textTransform: 'uppercase',
             }}>
@@ -94,7 +121,7 @@ function StopwatchScreen({ back, onTab }) {
         </div>
 
         {/* Controls */}
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 18, padding: '16px 0 10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 18, padding: '14px 0 10px' }}>
           <RoundBtn size={56} onClick={reset} bg="var(--bg-card)" fg="var(--text-dim)"><IconReset size={20}/></RoundBtn>
           <RoundBtn size={84} onClick={toggle} bg="var(--accent)" fg="var(--accent-ink)" border="transparent">
             {running ? <IconPause size={30}/> : <IconPlay size={30}/>}
