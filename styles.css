@@ -160,9 +160,10 @@ body {
 .btn-lg { padding: 18px 24px; font-size: 17px; border-radius: 18px; }
 
 /* Tabata phase background tint */
-.phase-bg-work { background: color-mix(in oklab, var(--work) 15%, var(--bg)); transition: background 400ms ease; }
-.phase-bg-rest { background: color-mix(in oklab, var(--rest) 15%, var(--bg)); transition: background 400ms ease; }
-.phase-bg-prep { background: color-mix(in oklab, var(--prep) 15%, var(--bg)); transition: background 400ms ease; }
+.phase-bg-work   { background: color-mix(in oklab, var(--work)   15%, var(--bg)); transition: background 400ms ease; }
+.phase-bg-rest   { background: color-mix(in oklab, var(--rest)   15%, var(--bg)); transition: background 400ms ease; }
+.phase-bg-prep   { background: color-mix(in oklab, var(--prep)   15%, var(--bg)); transition: background 400ms ease; }
+.phase-bg-accent { background: color-mix(in oklab, var(--accent) 15%, var(--bg)); transition: background 400ms ease; }
 
 /* Timer digits */
 .digits {

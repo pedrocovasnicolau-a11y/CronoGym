@@ -24,13 +24,15 @@
 <script type="text/babel" src="screen-tabata.jsx"></script>
 <script type="text/babel" src="screen-emom.jsx"></script>
 <script type="text/babel" src="screen-settings.jsx"></script>
+<script type="text/babel" src="screen-tempo.jsx"></script>
 
 <script type="text/babel">
 const { useState, useEffect, useRef } = React;
 
 function PhoneApp() {
   const [screen, setScreen] = useState('home');
-  const [cfg, setCfg] = useState({ prep: 0, work: 20, rest: 10, rounds: 8, sets: 1, setRest: 60 });
+  const [cfg, setCfg] = useState({ prep: 10, work: 20, rest: 10, rounds: 8, sets: 1, setRest: 60, cooldown: 0 });
+  const [tempoCfg, setTempoCfg] = useState({ prep: 10, sets: 4, reps: 8, rest: 90, ecc: 3, pauseB: 1, con: 2, pauseT: 0 });
   const [settings, setSettings] = useState({ alwaysOn: false, audioAlert: true, vibration: true });
   const wakeLockRef = useRef(null);
 
@@ -70,15 +72,15 @@ function PhoneApp() {
     else if (tab === 'settings') setScreen('settings');
   };
 
-  const activeTab = screen === 'settings' ? 'settings' : screen === 'home' ? 'home' : 'timers';
-
   let content;
-  if (screen === 'home')        content = <HomeScreen go={go} onTab={handleTab}/>;
+  if      (screen === 'home')        content = <HomeScreen go={go} onTab={handleTab}/>;
   else if (screen === 'stopwatch')   content = <StopwatchScreen back={back} onTab={handleTab}/>;
   else if (screen === 'countdown')   content = <CountdownScreen back={back} onTab={handleTab} settings={settings}/>;
   else if (screen === 'tabata')      content = <TabataConfigScreen back={back} onStart={() => setScreen('tabata-run')} cfg={cfg} setCfg={setCfg} onTab={handleTab}/>;
   else if (screen === 'tabata-run')  content = <TabataRunScreen back={() => setScreen('tabata')} cfg={cfg} onTab={handleTab} settings={settings}/>;
   else if (screen === 'emom')        content = <EmomScreen back={back} onTab={handleTab} settings={settings}/>;
+  else if (screen === 'tempo')       content = <TempoConfigScreen back={back} onStart={() => setScreen('tempo-run')} cfg={tempoCfg} setCfg={setTempoCfg} onTab={handleTab}/>;
+  else if (screen === 'tempo-run')   content = <TempoRunScreen back={() => setScreen('tempo')} cfg={tempoCfg} onTab={handleTab} settings={settings}/>;
   else if (screen === 'settings')    content = <SettingsScreen onTab={handleTab} settings={settings} setSettings={setSettings}/>;
   else                               content = <HomeScreen go={go} onTab={handleTab}/>;
 
