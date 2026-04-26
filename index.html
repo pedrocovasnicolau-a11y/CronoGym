@@ -31,9 +31,13 @@ const { useState, useEffect, useRef } = React;
 
 function PhoneApp() {
   const [screen, setScreen] = useState('home');
-  const [cfg, setCfg] = useState({ prep: 10, work: 20, rest: 10, rounds: 8, sets: 1, setRest: 60, cooldown: 0 });
-  const [tempoCfg, setTempoCfg] = useState({ prep: 10, sets: 4, reps: 8, rest: 90, ecc: 3, pauseB: 1, con: 2, pauseT: 0 });
-  const [settings, setSettings] = useState({ alwaysOn: false, audioAlert: true, vibration: true });
+  const [cfg, setCfg] = useState(() => lsGet('reps_tabata_cfg', { prep: 10, work: 20, rest: 10, rounds: 8, sets: 1, setRest: 60, cooldown: 0 }));
+  const [tempoCfg, setTempoCfg] = useState(() => lsGet('reps_tempo_cfg', { prep: 10, sets: 4, reps: 8, rest: 90, ecc: 3, pauseB: 1, con: 2, pauseT: 0 }));
+  const [settings, setSettings] = useState(() => lsGet('reps_settings', { alwaysOn: false, audioAlert: true, vibration: true }));
+
+  useEffect(() => { lsSet('reps_settings',    settings);  }, [settings]);
+  useEffect(() => { lsSet('reps_tabata_cfg',  cfg);       }, [cfg]);
+  useEffect(() => { lsSet('reps_tempo_cfg',   tempoCfg);  }, [tempoCfg]);
   const wakeLockRef = useRef(null);
 
   // Wake Lock — pantalla siempre visible

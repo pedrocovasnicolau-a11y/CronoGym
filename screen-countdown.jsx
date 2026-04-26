@@ -4,11 +4,13 @@
 const { useState: useStateCD, useEffect: useEffectCD, useRef: useRefCD } = React;
 
 function CountdownScreen({ back, onTab, settings, initial = 90 }) {
-  const [target, setTarget] = useStateCD(initial);
-  const [remaining, setRemaining] = useStateCD(initial);
+  const [target, setTargetRaw] = useStateCD(() => lsGet('reps_countdown_target', initial));
+  const [remaining, setRemaining] = useStateCD(() => lsGet('reps_countdown_target', initial));
   const [running, setRunning] = useStateCD(false);
   const [showPicker, setShowPicker] = useStateCD(false);
   const alertedRef = useRefCD(false);
+
+  const setTarget = (v) => { setTargetRaw(v); lsSet('reps_countdown_target', v); };
 
   const presets = [30, 60, 90, 120, 180, 300];
 
