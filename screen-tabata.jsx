@@ -225,9 +225,11 @@ function TabataRunScreen({ back, cfg, onTab, settings }) {
             const ni = i + 1;
             if (ni < list.length) {
               setRemaining(list[ni].dur);
-              triggerAlert(settings);
+              const nt = list[ni].type;
+              const alertType = nt === 'work' ? 'work' : (nt === 'rest' || nt === 'setRest') ? 'rest' : 'alert';
+              triggerAlert(settings, alertType);
             } else {
-              triggerAlert(settings);
+              triggerAlert(settings, 'end');
             }
             return ni;
           });

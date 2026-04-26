@@ -25,7 +25,7 @@ function CountdownScreen({ back, onTab, settings, initial = 90 }) {
           setRunning(false);
           if (!alertedRef.current) {
             alertedRef.current = true;
-            triggerAlert(settings);
+            triggerAlert(settings, 'end');
           }
           return 0;
         }
