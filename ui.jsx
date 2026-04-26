@@ -57,26 +57,56 @@ function _getCtx() {
   document.addEventListener('click',      unlock, { once: true });
 })();
 
-async function playBeep() {
+// type: 'work' | 'rest' | 'end' | 'alert'
+async function playBeep(type = 'alert') {
   try {
     const ctx = _getCtx();
     if (ctx.state === 'suspended') await ctx.resume();
-    const osc  = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.type = 'sine';
-    osc.frequency.value = 880;
-    gain.gain.setValueAtTime(0.4, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.25);
+
+    const tone = (freq, startT, dur, vol = 0.4) => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(vol, startT);
+      gain.gain.exponentialRampToValueAtTime(0.001, startT + dur);
+      osc.start(startT);
+      osc.stop(startT + dur);
+    };
+
+    const t = ctx.currentTime;
+    if (type === 'work') {
+      // Dos pitidos cortos y agudos — inicio de serie de trabajo
+      tone(880, t,        0.09);
+      tone(880, t + 0.14, 0.09);
+    } else if (type === 'rest') {
+      // Un pitido largo y grave — inicio de descanso
+      tone(440, t, 0.35, 0.35);
+    } else if (type === 'end') {
+      // Tres tonos ascendentes — fin de entrenamiento
+      tone(523, t,        0.18);
+      tone(659, t + 0.20, 0.18);
+      tone(784, t + 0.40, 0.28);
+    } else {
+      // Pitido simple de aviso
+      tone(660, t, 0.22);
+    }
   } catch(e) {}
 }
 
-function triggerAlert(settings) {
-  if (settings?.audioAlert) playBeep();
-  if (settings?.vibration) { try { navigator.vibrate?.([200, 100, 200]); } catch(e) {} }
+function triggerAlert(settings, type = 'alert') {
+  if (settings?.audioAlert) playBeep(type);
+  if (settings?.vibration) {
+    const patterns = {
+      work:  [80, 40, 80],
+      rest:  [200],
+      end:   [150, 80, 150, 80, 300],
+      alert: [200, 100, 200],
+    };
+    try { navigator.vibrate?.(patterns[type] ?? patterns.alert); } catch(e) {}
+  }
 }
 
 // ── localStorage helpers (available globally via window)
