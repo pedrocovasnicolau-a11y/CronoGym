@@ -184,12 +184,12 @@ function TempoRunScreen({ back, cfg, onTab, settings }) {
               setRemaining(list[ni].dur);
               const t = list[ni].type;
               if (t === 'ecc' && (i < 0 || list[i].rep !== list[ni].rep || list[i].set !== list[ni].set)) {
-                triggerAlert(settings);
+                triggerAlert(settings, 'work');
               } else if (t === 'rest') {
-                triggerAlert(settings);
+                triggerAlert(settings, 'rest');
               }
             } else {
-              triggerAlert(settings);
+              triggerAlert(settings, 'end');
             }
             return ni;
           });

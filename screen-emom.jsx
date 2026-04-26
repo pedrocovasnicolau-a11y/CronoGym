@@ -21,7 +21,7 @@ function EmomScreen({ back, onTab, settings }) {
         const total = minuteSec * totalMinutes;
         if (e >= total) {
           setRunning(false);
-          triggerAlert(settings);
+          triggerAlert(settings, 'end');
           return total;
         }
         // alert at each minute boundary
@@ -31,7 +31,7 @@ function EmomScreen({ back, onTab, settings }) {
         if (nextMin > prevMin && nextE < total) {
           if (lastMinuteRef.current !== nextMin) {
             lastMinuteRef.current = nextMin;
-            triggerAlert(settings);
+            triggerAlert(settings, 'work');
           }
         }
         return nextE;
