@@ -4,8 +4,11 @@
 const { useState: useStateEM, useEffect: useEffectEM, useRef: useRefEM } = React;
 
 function EmomScreen({ back, onTab, settings }) {
-  const [minuteSec, setMinuteSec] = useStateEM(60);
-  const [totalMinutes, setTotalMinutes] = useStateEM(10);
+  const [minuteSec, setMinuteSecRaw] = useStateEM(() => lsGet('reps_emom_interval', 60));
+  const [totalMinutes, setTotalMinutesRaw] = useStateEM(() => lsGet('reps_emom_rounds', 10));
+
+  const setMinuteSec    = (v) => { setMinuteSecRaw(v);    lsSet('reps_emom_interval', v); };
+  const setTotalMinutes = (v) => { setTotalMinutesRaw(v); lsSet('reps_emom_rounds',   v); };
   const [running, setRunning] = useStateEM(false);
   const [elapsed, setElapsed] = useStateEM(0);
   const [showIntervalPicker, setShowIntervalPicker] = useStateEM(false);

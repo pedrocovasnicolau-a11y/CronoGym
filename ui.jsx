@@ -30,26 +30,64 @@ function fmtHMS(totalSec) {
 }
 
 // ── Audio + vibration alerts
-function playBeep() {
+// Single shared AudioContext — avoids iOS restriction of creating new ones outside gestures
+let _audioCtx = null;
+function _getCtx() {
+  if (!_audioCtx) {
+    _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  return _audioCtx;
+}
+
+// Unlock AudioContext on first user touch/click (iOS requires this)
+;(function() {
+  const unlock = async () => {
+    try {
+      const ctx = _getCtx();
+      if (ctx.state === 'suspended') await ctx.resume();
+      // Play a silent buffer to fully unlock iOS audio
+      const buf = ctx.createBuffer(1, 1, 22050);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(ctx.destination);
+      src.start(0);
+    } catch(e) {}
+  };
+  document.addEventListener('touchstart', unlock, { once: true, passive: true });
+  document.addEventListener('click',      unlock, { once: true });
+})();
+
+async function playBeep() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
+    const ctx = _getCtx();
+    if (ctx.state === 'suspended') await ctx.resume();
+    const osc  = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain);
     gain.connect(ctx.destination);
-    osc.frequency.value = 880;
     osc.type = 'sine';
-    gain.gain.setValueAtTime(0.5, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.4, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
     osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.5);
-    ctx.close();
+    osc.stop(ctx.currentTime + 0.25);
   } catch(e) {}
 }
 
 function triggerAlert(settings) {
   if (settings?.audioAlert) playBeep();
   if (settings?.vibration) { try { navigator.vibrate?.([200, 100, 200]); } catch(e) {} }
+}
+
+// ── localStorage helpers (available globally via window)
+function lsGet(key, fallback) {
+  try {
+    const v = localStorage.getItem(key);
+    return v !== null ? JSON.parse(v) : fallback;
+  } catch { return fallback; }
+}
+function lsSet(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
 }
 
 // ── Horizontal progress bar (theme-aware)
@@ -284,6 +322,7 @@ function TimePicker({ label, seconds, onChange, min = 0, max = 3600 }) {
 Object.assign(window, {
   useTicker, fmtMMSS, fmtHMS,
   playBeep, triggerAlert,
+  lsGet, lsSet,
   ProgressBar, RoundBtn, TopBar, TabBar,
   DrumWheel, TimeDrumPicker,
   NumberPicker, TimePicker,
