@@ -1,119 +1,22 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>REPS — Timers de entreno</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<link rel="stylesheet" href="styles.css">
-</head>
-<body>
-<div id="root"></div>
-
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
-
-<script type="text/babel" src="icons.jsx"></script>
-<script type="text/babel" src="ui.jsx"></script>
-<script type="text/babel" src="screen-home.jsx"></script>
-<script type="text/babel" src="screen-stopwatch.jsx"></script>
-<script type="text/babel" src="screen-countdown.jsx"></script>
-<script type="text/babel" src="screen-tabata.jsx"></script>
-<script type="text/babel" src="screen-emom.jsx"></script>
-<script type="text/babel" src="screen-settings.jsx"></script>
-<script type="text/babel" src="screen-tempo.jsx"></script>
-
-<script type="text/babel">
-const { useState, useEffect, useRef } = React;
-
-function PhoneApp() {
-  const [screen, setScreen] = useState('home');
-  const [cfg, setCfg] = useState(() => lsGet('reps_tabata_cfg', { prep: 10, work: 20, rest: 10, rounds: 8, sets: 1, setRest: 60, cooldown: 0 }));
-  const [tempoCfg, setTempoCfg] = useState(() => lsGet('reps_tempo_cfg', { prep: 10, sets: 4, reps: 8, rest: 90, ecc: 3, pauseB: 1, con: 2, pauseT: 0 }));
-  const [settings, setSettings] = useState(() => lsGet('reps_settings', { alwaysOn: false, audioAlert: true, vibration: true }));
-
-  useEffect(() => { lsSet('reps_settings',    settings);  }, [settings]);
-  useEffect(() => { lsSet('reps_tabata_cfg',  cfg);       }, [cfg]);
-  useEffect(() => { lsSet('reps_tempo_cfg',   tempoCfg);  }, [tempoCfg]);
-  const wakeLockRef = useRef(null);
-
-  // Wake Lock — pantalla siempre visible
-  useEffect(() => {
-    let released = false;
-
-    const requestLock = async () => {
-      if (released) return;
-      try {
-        wakeLockRef.current = await navigator.wakeLock?.request('screen');
-      } catch(e) {}
-    };
-
-    const onVisibility = () => {
-      if (document.visibilityState === 'visible') requestLock();
-    };
-
-    if (settings.alwaysOn) {
-      requestLock();
-      document.addEventListener('visibilitychange', onVisibility);
-    }
-
-    return () => {
-      released = true;
-      document.removeEventListener('visibilitychange', onVisibility);
-      wakeLockRef.current?.release().catch(() => {});
-      wakeLockRef.current = null;
-    };
-  }, [settings.alwaysOn]);
-
-  const go = (s) => setScreen(s);
-  const back = () => setScreen('home');
-
-  const handleTab = (tab) => {
-    if (tab === 'home' || tab === 'timers') setScreen('home');
-    else if (tab === 'settings') setScreen('settings');
-  };
-
-  let content;
-  if      (screen === 'home')        content = <HomeScreen go={go} onTab={handleTab}/>;
-  else if (screen === 'stopwatch')   content = <StopwatchScreen back={back} onTab={handleTab}/>;
-  else if (screen === 'countdown')   content = <CountdownScreen back={back} onTab={handleTab} settings={settings}/>;
-  else if (screen === 'tabata')      content = <TabataConfigScreen back={back} onStart={() => setScreen('tabata-run')} cfg={cfg} setCfg={setCfg} onTab={handleTab}/>;
-  else if (screen === 'tabata-run')  content = <TabataRunScreen back={() => setScreen('tabata')} cfg={cfg} onTab={handleTab} settings={settings}/>;
-  else if (screen === 'emom')        content = <EmomScreen back={back} onTab={handleTab} settings={settings}/>;
-  else if (screen === 'tempo')       content = <TempoConfigScreen back={back} onStart={() => setScreen('tempo-run')} cfg={tempoCfg} setCfg={setTempoCfg} onTab={handleTab}/>;
-  else if (screen === 'tempo-run')   content = <TempoRunScreen back={() => setScreen('tempo')} cfg={tempoCfg} onTab={handleTab} settings={settings}/>;
-  else if (screen === 'settings')    content = <SettingsScreen onTab={handleTab} settings={settings} setSettings={setSettings}/>;
-  else                               content = <HomeScreen go={go} onTab={handleTab}/>;
-
-  return (
-    <div className="app-root theme-light">
-      {content}
-      {settings.alwaysOn && (
-        <div style={{
-          position: 'fixed',
-          top: 'max(env(safe-area-inset-top, 0px), 8px)',
-          right: 14, zIndex: 20,
-          display: 'flex', alignItems: 'center', gap: 5,
-          padding: '3px 7px', borderRadius: 100,
-          background: 'color-mix(in oklab, var(--accent) 18%, transparent)',
-          border: '1px solid color-mix(in oklab, var(--accent) 40%, transparent)',
-          pointerEvents: 'none',
-        }}>
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)' }}/>
-          <span style={{
-            fontFamily: 'JetBrains Mono, monospace', fontSize: 8, fontWeight: 700,
-            letterSpacing: '0.12em', color: 'var(--accent)', textTransform: 'uppercase',
-          }}>ON</span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-ReactDOM.createRoot(document.getElementById('root')).render(<PhoneApp/>);
-</script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#F3F0E8" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="CronoGym" />
+    <title>CronoGym — Timers de entreno</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>
