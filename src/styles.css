@@ -1,0 +1,324 @@
+/* CronoGym — design tokens (tema claro único) */
+
+:root {
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --bg: #f3f0e8;
+  --bg-elev: #ffffff;
+  --bg-card: #ffffff;
+  --border: #e2ded2;
+  --text: #0b0b0e;
+  --text-dim: #6a6a74;
+  --text-faint: #a5a59c;
+  --accent: #2f4fff;
+  --accent-ink: #ffffff;
+  --work: #e84118;
+  --rest: #1ba876;
+  --prep: #e0a800;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-display);
+  background: var(--bg);
+  color: var(--text);
+}
+
+#root {
+  height: 100%;
+}
+
+.app-root {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-display);
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+  -webkit-user-select: none;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.scroll-area::-webkit-scrollbar {
+  width: 0;
+}
+
+/* Tipografía */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.title-xl {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin: 0;
+}
+
+.title-lg {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.title-md {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  margin: 0;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* Pulsable */
+.press {
+  cursor: pointer;
+  transition:
+    transform 90ms ease,
+    opacity 90ms ease,
+    background 120ms ease;
+}
+.press:active {
+  transform: scale(0.97);
+  opacity: 0.85;
+}
+
+/* Chips */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 100px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--bg-card);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+
+.chip-accent {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: transparent;
+}
+
+/* Botones */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: 14px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 90ms ease,
+    opacity 90ms ease;
+  font-size: 15px;
+  padding: 14px 20px;
+}
+.btn:active {
+  transform: scale(0.97);
+}
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.btn-ghost {
+  background: var(--bg-card);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-lg {
+  padding: 18px 24px;
+  font-size: 17px;
+  border-radius: 18px;
+}
+
+/* Tinte de fondo según fase */
+.phase-bg-work {
+  background: color-mix(in oklab, var(--work) 15%, var(--bg));
+  transition: background 400ms ease;
+}
+.phase-bg-rest {
+  background: color-mix(in oklab, var(--rest) 15%, var(--bg));
+  transition: background 400ms ease;
+}
+.phase-bg-prep {
+  background: color-mix(in oklab, var(--prep) 15%, var(--bg));
+  transition: background 400ms ease;
+}
+.phase-bg-accent {
+  background: color-mix(in oklab, var(--accent) 15%, var(--bg));
+  transition: background 400ms ease;
+}
+
+/* Dígitos del timer */
+.digits {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.9;
+}
+
+/* Barra de progreso */
+.bar-track {
+  width: 100%;
+  height: 8px;
+  background: var(--border);
+  border-radius: 100px;
+  overflow: hidden;
+  position: relative;
+}
+.bar-fill {
+  height: 100%;
+  border-radius: 100px;
+  transition: width 100ms linear;
+}
+
+/* Barra de pestañas inferior */
+.tabbar {
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 12px 10px;
+  background: var(--bg-elev);
+  border-top: 1px solid var(--border);
+}
+.tab {
+  flex: 1;
+  padding: 8px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  border-radius: 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.tab.active {
+  color: var(--accent);
+}
+.tab.active .tab-icon {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.tab-icon {
+  width: 34px;
+  height: 22px;
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-faint);
+  background: transparent;
+  transition: background 120ms;
+}
+
+/* Tarjetas */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 16px;
+}
+
+/* Pulso del punto "en directo" */
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
+}
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse-dot 1s infinite ease-in-out;
+}
+
+/* Selector numérico grande */
+.picker-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  gap: 6px;
+}
+.picker-val {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 48px;
+  letter-spacing: -0.04em;
+  color: var(--text);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.picker-lbl {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.picker-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: 500;
+}
