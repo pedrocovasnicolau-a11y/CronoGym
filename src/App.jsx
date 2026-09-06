@@ -99,7 +99,7 @@ export default function App() {
   else content = <HomeScreen go={go} onTab={handleTab} />;
 
   return (
-    <div className="app-root">
+    <main className="app-root">
       {content}
       {settings.alwaysOn && (
         <div
@@ -133,6 +133,6 @@ export default function App() {
           </span>
         </div>
       )}
-    </div>
+    </main>
   );
 }

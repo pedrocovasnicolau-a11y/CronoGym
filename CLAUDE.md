@@ -21,6 +21,7 @@ pensada para móvil y funcional como **PWA instalable y offline**.
 | `npm run lint` | ESLint sobre todo el repo |
 | `npm run format` | Prettier `--write` |
 | `npm test` | Vitest (una pasada) · `npm run test:watch` para modo watch |
+| `npm run e2e` | prueba de humo emulando Android (Pixel 5) con Playwright — necesita `npm run preview` en el puerto 4173 |
 | `npm run gen-icons` | regenera los iconos PWA desde `assets/icon.svg` (requiere `sharp`) |
 
 ## Estructura
