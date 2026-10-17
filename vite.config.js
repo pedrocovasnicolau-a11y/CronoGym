@@ -6,6 +6,8 @@ import { VitePWA } from 'vite-plugin-pwa';
 const THEME_COLOR = '#F3F0E8';
 
 export default defineConfig({
+  // Publicado en GitHub Pages como sitio de proyecto: https://<usuario>.github.io/CronoGym/
+  base: '/CronoGym/',
   plugins: [
     react(),
     VitePWA({
@@ -17,8 +19,8 @@ export default defineConfig({
         description:
           'Temporizadores de entreno: Tabata/HIIT, EMOM, Tempo, cuenta atrás y cronómetro',
         lang: 'es',
-        start_url: '/',
-        scope: '/',
+        start_url: '/CronoGym/',
+        scope: '/CronoGym/',
         display: 'standalone',
         orientation: 'portrait',
         background_color: THEME_COLOR,
@@ -36,7 +38,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        navigateFallback: '/index.html',
+        navigateFallback: '/CronoGym/index.html',
       },
     }),
   ],
